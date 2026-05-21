@@ -57,6 +57,24 @@ Across the paper's low-resource domain RAG experiments, ARMOR improves over froz
   <em>ARMOR improves RAG performance across generator backbones, with the largest gains for smaller generators.</em>
 </p>
 
+The table-level results from the paper show complementary behavior across training-aligned open-ended QA and broader multiple-choice transfer. On Tele-Eval, ARMOR is the most consistent method overall across ISAC and JCC, while RAG QE FT is strongest on SAGIN. On Tele-QnA, the transfer results are more mixed, with ARMOR performing best or tied-best on JCC and SAGIN.
+
+<p align="center">
+  <img src="assets/tele_eval_table1.png" alt="Tele-Eval Table 1 results" width="900">
+</p>
+
+<p align="center">
+  <em>Tele-Eval open-ended QA and retrieval results across three low-resource domain splits.</em>
+</p>
+
+<p align="center">
+  <img src="assets/tele_qna_table2.png" alt="Tele-QnA Table 2 results" width="520">
+</p>
+
+<p align="center">
+  <em>Tele-QnA multiple-choice accuracy highlights the harder out-of-corpus transfer setting.</em>
+</p>
+
 ARMOR's learned temperatures also show meaningful training dynamics: the retrieval objective sharpens during optimization, while query-distillation regularization helps constrain drift from the frozen base embedding space.
 
 <p align="center">
