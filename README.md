@@ -1,10 +1,9 @@
-<img src="assets/armor_logo.png" alt="ARMOR logo" width="230" align="left">
-
-# ARMOR: Adaptive Regularized Mixture Optimization for Retrievers
+<h1>
+  <img src="assets/armor_logo.png" alt="ARMOR logo" width="110" align="center">
+  ARMOR: Adaptive Regularized Mixture Optimization for Retrievers
+</h1>
 
 **Low-resource domain adaptation for retrieval-augmented generation.**
-
-<br clear="left">
 
 ---
 
