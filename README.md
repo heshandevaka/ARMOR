@@ -1,9 +1,14 @@
-<h1>
-  <img src="assets/armor_logo.png" alt="ARMOR logo" width="110" align="center">
-  ARMOR: Adaptive Regularized Mixture Optimization for Retrievers
-</h1>
-
-**Low-resource domain adaptation for retrieval-augmented generation.**
+<table>
+  <tr>
+    <td width="250" align="center">
+      <img src="assets/armor_logo.png" alt="ARMOR logo" width="230">
+    </td>
+    <td>
+      <h1>ARMOR: Adaptive Regularized Mixture Optimization for Retrievers</h1>
+      <p><strong>Low-resource domain adaptation for retrieval-augmented generation.</strong></p>
+    </td>
+  </tr>
+</table>
 
 ---
 
