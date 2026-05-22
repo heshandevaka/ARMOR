@@ -91,32 +91,48 @@ The retrieval temperature sharpens during training, indicating that the retrieve
 
 ## Repository Structure
 
-TODO: Add a concise overview of the code layout.
-
-Suggested sections:
-
-- `unified_data_gen/`: data filtering, indexing, QA generation, and alignment.
-- `retriever_training/`: RAG, InfoNCE, mixed-objective, ARMOR, RAFT, and SFT training scripts.
-- `evaluation/`: Tele-Eval and TeleQnA evaluation scripts.
+- `unified_data_gen/`: data preparation pipeline for building domain-specific training data. It covers document filtering, corpus indexing, QA generation, QA-to-evidence alignment, and train/validation/test split creation.
+- `retriever_training/`: training scripts for retriever adaptation, mixed-objective optimization, generator-side baselines, and related comparison methods.
+- `evaluation/`: evaluation scripts for Tele-Eval and Tele-QnA, plus launchers for running trained methods on the supported evaluation splits.
 
 ## Setup
 
-TODO: Add environment creation and dependency installation instructions.
+Create a conda environment with Python 3.10 and install the repository dependencies:
 
-Suggested items:
-
-- Python version
-- PyTorch / CUDA requirements
-- FAISS installation
-- vLLM installation
-- Hugging Face model access
-- OpenAI API key usage for judging/filtering, if applicable
+```bash
+cd /data/hdf/ARMOR
+conda create -n armor python=3.10 -y
+conda activate armor
+pip install -r requirements.txt
+```
 
 ## Running Experiments
 
-TODO: Add canonical command examples.
+First, generate the ISAC dataset and retrieval index:
 
-For now, use `retriever_training/train_isac_all_methods.sh` as the canonical example script for launching the main methods:
+```bash
+cd /data/hdf/ARMOR/unified_data_gen
+export OPENAI_API_KEY=<your_openai_api_key>
+
+bash run_pipeline.sh isac
+```
+
+The pipeline filters `AliMaatouk/Tele-Data` for ISAC, builds a FAISS/SQLite retrieval index, generates grounded QA pairs, aligns QA examples to indexed chunks, and writes train/validation/test splits under `unified_data_gen/data/isac/`. Because the ARMOR release currently includes only `domains/isac`, `run_pipeline.sh` accepts only `isac`.
+
+The generated files used by the training script include:
+
+```text
+unified_data_gen/data/unified/unified_index.faiss
+unified_data_gen/data/unified/unified_chunks.sqlite
+unified_data_gen/data/isac/aligned_train_unified.jsonl
+unified_data_gen/data/isac/aligned_val_unified.jsonl
+unified_data_gen/data/isac/splits/ft/train.jsonl
+unified_data_gen/data/isac/splits/ft/val.jsonl
+unified_data_gen/data/isac/splits/raft/train.jsonl
+unified_data_gen/data/isac/splits/raft/val.jsonl
+```
+
+Use `retriever_training/train_isac_all_methods.sh` to launch the main training methods:
 
 ```bash
 cd retriever_training
@@ -128,7 +144,26 @@ bash train_isac_all_methods.sh mix_static
 bash train_isac_all_methods.sh mix_adaptive
 ```
 
-TODO: Document expected data paths, checkpoints, and output directories before these commands are fully reproducible.
+The available training methods are:
+
+```text
+rag, contriever, mix_static, mix_adaptive, rag_lm_query_ft, raft, replug, sft
+```
+
+The evaluation script runs the retriever-trained methods with their saved `query_encoder_final` checkpoints, evaluates `rag_lm_query_ft` with both `lm_final` and `query_encoder_final`, evaluates `sft` as a closed-book generator, and uses the RAFT-style evaluator from `/data/hdf/telecom-co-scientist/eval/isac/eval_rag_raft.py` for `raft`.
+
+By default, the script assumes checkpoints and data follow the paths produced by `train_isac_all_methods.sh`. Override paths or hyperparameters from the shell when needed:
+
+```bash
+CKPT_ROOT=/path/to/checkpoints \
+UNIFIED_INDEX=/path/to/unified_index.faiss \
+UNIFIED_DB=/path/to/unified_chunks.sqlite \
+DOMAIN_TEST=/path/to/test.jsonl \
+TELE_EVAL_IN=/path/to/in_domain.jsonl \
+TELE_EVAL_OUT=/path/to/out_domain.jsonl \
+LR=2e-5 BS=4 TOP_K=16 \
+bash evaluation/eval_isac_all_methods_sample.sh
+```
 
 ## Citation
 
