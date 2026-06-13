@@ -88,8 +88,10 @@ document.addEventListener('DOMContentLoaded', () => {
             chatResponse.classList.add('hidden');
             
             try {
-                // Determine API URL (default to localhost:18000)
-                const apiUrl = 'http://localhost:18000/ask';
+                // Determine API URL (default to localhost:18000 for local dev, or the production URL)
+                const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+                    ? 'http://localhost:18000/ask'
+                    : 'https://armor-agent.duckdns.org/ask';
                 
                 const requestBody = {
                     question: question,
