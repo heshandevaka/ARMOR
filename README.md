@@ -133,42 +133,41 @@ The table below summarizes the open-ended QA score (as graded by the LLM judge o
 
 ---
 
-### 2. Retriever Component Ablations (ISAC Domain)
+### 2. ARMOR Component Ablation
 
-To isolate the impact of different objectives and regularization strategies, we ablate components of the ARMOR loss function on the ISAC domain:
+The table below presents the component ablation for ARMOR on the ISAC domain, evaluating different combinations of learnable temperatures and distillation regularization:
 
-| Loss Component / Method | Average Score | Recall@1 | Recall@3 | Recall@5 |
-| :--- | :---: | :---: | :---: | :---: |
-| **Base Gen** (Closed Book) | 0.2269 | -- | -- | -- |
-| **Base RAG** (un-tuned `e5-large-v2`) | 0.6893 | **0.5467** | 0.7400 | 0.8067 |
-| **RAG QE FT** (RAG Loss Only) | 0.6584 | 0.5000 | 0.6533 | 0.7400 |
-| **InfoNCE QE FT** (InfoNCE Loss Only) | 0.6685 | 0.5200 | 0.6733 | 0.7533 |
-| **Mix QE FT** (Static mix, no regularization) | 0.6854 | 0.4733 | 0.6333 | 0.7133 |
-| **Static Mix with Regularization** (`static_mix_reg`) | 0.6725 | 0.5333 | 0.7333 | **0.8200** |
-| **Dynamic Mix without Regularization** (`dynamic_mix_no_reg`) | 0.6349 | 0.4667 | 0.6400 | 0.7133 |
-| **ARMOR** (Adaptive mixture with regularization) | **0.7119** | 0.5267 | **0.7667** | **0.8200** |
+| Method | Adaptive Temps | Regularization | Average Score |
+| :--- | :---: | :---: | :---: |
+| Base RAG | -- | -- | 0.689 |
+| RAG QE FT | -- | -- | 0.658 |
+| InfoNCE QE FT | -- | -- | 0.669 |
+| Mix QE FT | no | no | 0.685 |
+| Static Mix with Reg. | no | yes | 0.673 |
+| Dynamic Mix without Reg. | yes | no | 0.635 |
+| ARMOR | yes | yes | **0.712** |
 
-*Note: The best values for each metric are bolded.*
+*Caption: Component ablation for ARMOR on ISAC Tele-Eval. Higher is better. Each row ablates a different combination of ARMOR components: adaptive temperatures ($\tau_r$, $\tau_c$) and query-distillation regularization ($\mu$). Base RAG is included as a reference for the unadapted retriever.*
+
 
 **Accompanying Analysis & Key Takeaways:**
 - **Destructive Drift Without Regularization:** Tuning solely with InfoNCE or RAG loss, or employing a static mixture without regularization, results in query representation drift that underperforms the un-tuned base model.
-- **Regularization Benefit:** The inclusion of query distillation regularization (`static_mix_reg`) preserves semantic compatibility, lifting the average score and improving R@5 to 0.8200.
-- **Learnable Loss Balancing:** The full ARMOR framework combines learnable temperatures (which dynamically scale the mixture weights) with query distillation, achieving the best score of 0.7119 and strong recall metrics.
+- **Regularization Benefit:** The inclusion of query distillation regularization preserves semantic compatibility, lifting the average score and preventing query encoder drift.
+- **Learnable Loss Balancing:** The full ARMOR framework combines learnable temperatures (which dynamically scale the mixture weights) with query distillation, achieving the best score of 0.712.
 
 ---
 
-### 3. Model Scale Ablations
+### 3. Model Scale Ablation
 
-We evaluate the influence of the generator size and type on domain RAG performance, comparing Closed-Book, Base RAG, and ARMOR query adaptation:
+The figure below evaluates the average generation scores across different generator model scales (1B, 3B, 8B parameters) in closed book (Base Gen), un-tuned RAG (Base RAG), and ARMOR configurations:
 
-| Generator Model | Base Gen | Base RAG | ARMOR |
-| :--- | :---: | :---: | :---: |
-| **Llama-3.2-1B** | 0.1018 | **0.4891** | 0.4870 |
-| **Llama-3.2-3B** | 0.1587 | **0.7100** | 0.6907 |
-| **Llama-3-8B** | 0.2269 | 0.6893 | **0.7119** |
-| **Qwen3-8B** | 0.2998 | 0.7058 | **0.7273** |
+<p align="center">
+  <img src="assets/model_performance_comparison_refined.png" alt="Model scale performance comparison" width="700">
+</p>
 
-*Note: The best retriever configuration within each model scale is bolded.*
+<p align="center">
+  <em>Figure 2: Average generation scores across different generator models in closed book (Base Gen), un-tuned RAG (Base RAG), and ARMOR configurations on ISAC.</em>
+</p>
 
 **Accompanying Analysis & Key Takeaways:**
 - **Capacity Bottlenecks:** While increasing generator size scale-up general closed-book and base-RAG capabilities, smaller generators (1B and 3B parameters) exhibit reasoning limitations that prevent them from fully exploiting retriever-side improvements.
