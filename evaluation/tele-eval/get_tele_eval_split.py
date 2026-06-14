@@ -1,7 +1,42 @@
 import argparse
+import json
 import os
 from datasets import load_dataset, DatasetDict
 from collections import Counter
+
+
+def load_source_ids_from_jsonl(path: str, source_key: str) -> tuple[set, int]:
+    source_ids = set()
+    total = 0
+    missing = 0
+
+    with open(path, "r", encoding="utf-8") as f:
+        for line_no, line in enumerate(f, start=1):
+            line = line.strip()
+            if not line:
+                continue
+            total += 1
+            try:
+                obj = json.loads(line)
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Invalid JSON on line {line_no} of {path}: {e}") from e
+
+            source_id = obj.get(source_key)
+            if source_id is None:
+                missing += 1
+                continue
+            source_ids.add(source_id)
+
+    if not source_ids:
+        raise KeyError(
+            f"No source IDs found with key '{source_key}' in {path}. "
+            f"Rows read: {total}; rows missing key: {missing}."
+        )
+
+    if missing:
+        print(f"Warning: {missing} domain rows did not contain '{source_key}' and were skipped.")
+
+    return source_ids, total
 
 
 def main():
@@ -58,18 +93,15 @@ def main():
 
     args = parser.parse_args()
 
-    # 1) Load domain dataset JSONL
+    # 1) Load source IDs from the domain JSONL.
+    # Use direct JSONL parsing instead of load_dataset("json") because domain
+    # records can contain heterogeneous nested metadata fields.
     print(f"Loading domain dataset from {args.domain_jsonl} ...")
-    domain_ds = load_dataset("json", data_files=args.domain_jsonl, split="train")
-
-    if args.domain_source_key not in domain_ds.column_names:
-        raise KeyError(
-            f"Domain dataset has no column '{args.domain_source_key}'. "
-            f"Available columns: {domain_ds.column_names}"
-        )
-
-    domain_source_ids = set(domain_ds[args.domain_source_key])
-    print(f"Domain dataset size: {len(domain_ds)}")
+    domain_source_ids, domain_size = load_source_ids_from_jsonl(
+        args.domain_jsonl,
+        args.domain_source_key,
+    )
+    print(f"Domain dataset size: {domain_size}")
     print(f"Unique domain source IDs: {len(domain_source_ids)}")
 
     # 2) Load Tele-Eval

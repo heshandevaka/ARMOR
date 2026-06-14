@@ -5,7 +5,7 @@ set -e
 # ARMOR currently includes only the ISAC domain prompts/config under domains/isac.
 DOMAIN="${1:-isac}"
 if [[ "$DOMAIN" != "isac" ]]; then
-  echo "Error: ARMOR/unified_data_gen currently includes only the 'isac' domain." >&2
+  echo "Error: ARMOR/data_gen currently includes only the 'isac' domain." >&2
   echo "Usage: $0 [isac]" >&2
   exit 1
 fi
@@ -133,7 +133,7 @@ python split_data.py \
     --input "$ALIGN_OUT" \
     --out_dir "$SPLIT_DIR"
 
-# Compatibility outputs consumed by retriever_training/train_isac_all_methods.sh.
+# Compatibility outputs consumed by retriever_training/train_isac_armor.sh.
 cp "$SPLIT_DIR/raft/train.jsonl" "$OUT_DIR/aligned_train_unified.jsonl"
 cp "$SPLIT_DIR/raft/val.jsonl" "$OUT_DIR/aligned_val_unified.jsonl"
 

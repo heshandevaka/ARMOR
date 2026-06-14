@@ -65,7 +65,7 @@ def cleanup_distributed():
 # Logging
 # ============================================================
 
-def build_logger(log_dir: str, name: str = "rag_contriever_static_adaptive_temp_reg") -> logging.Logger:
+def build_logger(log_dir: str, name: str = "armor") -> logging.Logger:
     os.makedirs(log_dir, exist_ok=True)
     rank = get_rank()
 
@@ -1027,7 +1027,7 @@ def train(args, logger: logging.Logger):
             if global_step % args.log_every == 0:
                 grad_norm_val = float(grad_norm.item()) if grad_norm is not None and torch.is_tensor(grad_norm) else None
                 msg = (
-                    f"phase={phase_name} step={global_step} objective=rag_contriever_static_adaptive_temp_reg loss={mean_loss:.6f} "
+                    f"phase={phase_name} step={global_step} objective=armor loss={mean_loss:.6f} "
                     f"batch={len(batch_q)} avg_retrieved={mean_avg_retrieved:.2f} "
                     f"best_doc_rank={mean_best_doc_rank:.2f} best_doc_target_mass={mean_gold_mass:.4f} "
                     f"t_retr={retrieval_time:.2f}s t_teacher={teacher_time:.2f}s t_train={train_time:.2f}s "
