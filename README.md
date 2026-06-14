@@ -50,7 +50,7 @@ where the RAG and InfoNCE terms use separate learned temperatures. These tempera
 
 - `data_gen/`: data preparation pipeline for building the ISAC training data. It covers document filtering, corpus indexing, QA generation, QA-to-evidence alignment, and train/validation/test split creation.
 - `retriever_training/`: training scripts for retriever adaptation using the **ARMOR** method.
-- `evaluation/`: evaluation scripts for Tele-Eval and Tele-QnA benchmarks.
+- `evaluation/`: evaluation scripts for the Tele-Eval benchmark.
 
 ## Setup
 
@@ -99,7 +99,7 @@ bash train_isac_armor.sh
 By default, training will run on GPUs `0` and `1`. This will optimize the query encoder weights and learned temperatures, saving checkpoints and logs under the `checkpoints/` directory.
 
 ### 3. Evaluation
-After training completes, run evaluations for both the baseline configurations (Closed-Book, Base RAG) and your trained ARMOR checkpoint against the **Tele-Eval** and **Tele-QnA** benchmarks:
+After training completes, run evaluations for both the baseline configurations (Closed-Book, Base RAG) and your trained ARMOR checkpoint against the **Tele-Eval** benchmark:
 
 ```bash
 cd ../evaluation
@@ -110,7 +110,7 @@ By default, evaluation results will be saved under the `results_isac/` directory
 
 ## Evaluation Results
 
-We evaluate our adapted retrievers and baselines on the **Tele-Eval** and **Tele-QnA** benchmarks using a generator model. The dense retriever is evaluated under `topk=16` retrieval context setup. All results below are reported on the standard 150-sample evaluation slice, using scripts from the [evaluation/](file:///data/hdf/ARMOR_clean/evaluation) folder.
+We evaluate our adapted retrievers and baselines on the **Tele-Eval** benchmark using a generator model. The dense retriever is evaluated under `topk=16` retrieval context setup. All results below are reported on the standard 150-sample evaluation slice, using scripts from the [evaluation/](file:///data/hdf/ARMOR_clean/evaluation) folder.
 
 ### 1. Tele-Eval Main Results
 
