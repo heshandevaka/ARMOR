@@ -173,3 +173,7 @@ The figure below evaluates the average generation scores across different genera
 - **Capacity Bottlenecks:** While increasing generator size scale-up general closed-book and base-RAG capabilities, smaller generators (1B and 3B parameters) exhibit reasoning limitations that prevent them from fully exploiting retriever-side improvements.
 - **Synergistic Improvement at Scale:** ARMOR achieves clear improvements over Base RAG for the 8B models (Llama-3-8B and Qwen3-8B), demonstrating that a highly capable generator is required to translate better retrieval relevance into superior final answers.
 
+## Acknowledgement
+
+We would like to thank all projects this repo is built on, especially [Tele-LLMs](https://github.com/Ali-maatouk/Tele-LLMs) for open-sourcing [Tele-Data](https://huggingface.co/datasets/AliMaatouk/Tele-Data) and [Tele-Eval](https://huggingface.co/datasets/AliMaatouk/Tele-Eval) datasets, which are used in this project.
+
