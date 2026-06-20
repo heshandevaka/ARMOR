@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 // Determine API URL (default to localhost:18000 for local dev, or the production URL)
                 const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-                    ? 'http://localhost:18000/ask'
+                    ? 'http://localhost:8010/ask'
                     : 'https://armor-agent.duckdns.org/ask';
                 
                 const requestBody = {
