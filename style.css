@@ -881,3 +881,214 @@ footer p {
         stroke-dashoffset: -124;
     }
 }
+
+/* ==========================================================================
+   New Results & Discussion Components
+   ========================================================================== */
+
+/* Math Block Styles */
+.math-block {
+    background-color: rgba(33, 92, 168, 0.03);
+    border-left: 4px solid var(--primary);
+    padding: 1.5rem;
+    border-radius: 4px;
+    margin: 1.5rem 0;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.15rem;
+    color: var(--primary-dark);
+    overflow-x: auto;
+}
+
+.math-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--secondary);
+    margin-bottom: 0.5rem;
+}
+
+.math-formula {
+    font-family: 'Outfit', 'Inter', monospace;
+    font-weight: 600;
+    text-align: center;
+    padding: 0.5rem 0;
+}
+
+/* Responsive Table Wrapper */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid var(--accent);
+    box-shadow: var(--shadow-sm);
+    background: #ffffff;
+}
+
+/* Premium Table Styles */
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    text-align: left;
+}
+
+.results-table th {
+    background-color: var(--bg-alt);
+    color: var(--text-main);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    padding: 1rem 1.25rem;
+    border-bottom: 2px solid var(--accent);
+}
+
+.results-table td {
+    padding: 0.85rem 1.25rem;
+    border-bottom: 1px solid var(--accent);
+    color: var(--text-muted);
+}
+
+.results-table tr:last-child td {
+    border-bottom: none;
+}
+
+.results-table tr:hover {
+    background-color: rgba(33, 92, 168, 0.02);
+}
+
+/* Highlight Best Performance */
+.best-val {
+    font-weight: 700;
+    color: var(--primary);
+    background-color: rgba(33, 92, 168, 0.08);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+/* Table Headers with Sub-columns */
+.results-table th.center, .results-table td.center {
+    text-align: center;
+}
+
+/* Tab Component for Dynamics */
+.tabs-container {
+    margin-top: 1.5rem;
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--accent);
+}
+
+.tabs-header {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--accent);
+    padding-bottom: 0.75rem;
+}
+
+.tab-btn {
+    background: var(--bg-alt);
+    border: 1px solid var(--accent);
+    color: var(--text-muted);
+    padding: 0.6rem 1.5rem;
+    border-radius: 30px;
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.tab-btn:hover {
+    border-color: var(--primary-light);
+    color: var(--primary);
+}
+
+.tab-btn.active {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: white;
+    box-shadow: 0 4px 10px rgba(33, 92, 168, 0.25);
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+/* Ablations Grid */
+.ablation-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+/* FAQ/Takeaways Cards */
+.faq-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 2rem;
+    margin-top: 2.5rem;
+}
+
+@media (max-width: 768px) {
+    .faq-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.faq-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--accent);
+    transition: var(--transition);
+    border-top: 4px solid var(--primary-light);
+}
+
+.faq-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.faq-question {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.faq-question::before {
+    content: '?';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background-color: rgba(33, 92, 168, 0.1);
+    color: var(--primary);
+    border-radius: 50%;
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+.faq-answer {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.7;
+}

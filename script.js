@@ -231,4 +231,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // 5. Training Dynamics Tab Switching
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetTab = btn.getAttribute('data-tab');
+
+            // Deactivate all buttons and panes
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabPanes.forEach(p => p.classList.remove('active'));
+
+            // Activate current
+            btn.classList.add('active');
+            const activePane = document.getElementById(`tab-${targetTab}`);
+            if (activePane) {
+                activePane.classList.add('active');
+            }
+        });
+    });
 });

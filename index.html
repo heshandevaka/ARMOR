@@ -19,6 +19,7 @@
                 <li><a href="#abstract">Abstract</a></li>
                 <li><a href="#method">Method</a></li>
                 <li><a href="#results">Results</a></li>
+                <li><a href="#takeaways">Discussion</a></li>
                 <li><a href="#demo">Demo</a></li>
             </ul>
         </div>
@@ -69,19 +70,42 @@
                 <div class="grid-2-col">
                     <div class="method-content">
                         <h3>Retriever-Centric Adaptation</h3>
-                        <p>In the ARMOR setup, documents are embedded once using a base dense retriever and stored in a fixed index. During adaptation, only the query encoder is updated. This focuses limited supervision on the component that controls which evidence is shown to the model.</p>
+                        <p>In the ARMOR setup, documents are embedded once using a base dense retriever and stored in a fixed index. During adaptation, only the query encoder is updated. This focuses limited supervision on the component that controls which evidence is shown to the model, ensuring the document representation remains stable.</p>
                         
                         <h3>Adaptive Regularized Mixture Optimization</h3>
-                        <p>ARMOR optimizes a combination of three key components:</p>
-                        <ul class="feature-list">
-                            <li><strong>RAG Likelihood:</strong> Rewards retrieved documents that improve answer generation.</li>
-                            <li><strong>InfoNCE:</strong> A contrastive objective that improves semantic retrieval geometry.</li>
-                            <li><strong>Query Distillation:</strong> Regularizes the adapted query encoder toward the frozen base query encoder, preserving compatibility with the existing document space.</li>
-                        </ul>
-                        <div class="highlight-box">
-                            <code>Loss = L<sub>RAG</sub>(τ<sub>r</sub>) + L<sub>InfoNCE</sub>(τ<sub>c</sub>) + L<sub>distill</sub></code>
+                        <p>ARMOR optimizes a combination of three key components to adapt the retriever toward downstream generation utility:</p>
+                        
+                        <div class="math-block">
+                            <div class="math-title">1. RAG Likelihood Objective</div>
+                            <div class="math-formula">f<sub>RAG</sub>(x, y; &tau;<sub>r</sub>) = -log &sum;<sub>d &in; D<sub>k</sub>(x)</sub> p<sub>&eta;</sub><sup>(&tau;<sub>r</sub>)</sup>(d|x) p<sub>&theta;<sub>0</sub></sub>(y|x, d)</div>
+                            <p style="font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0; color: var(--text-muted);">
+                                Rewards evidence that helps the frozen generator (p<sub>&theta;<sub>0</sub></sub>) produce the correct answer. The learned temperature <strong>&tau;<sub>r</sub></strong> controls how sharply the retrieval probability distribution p<sub>&eta;</sub><sup>(&tau;<sub>r</sub>)</sup>(d<sub>i</sub>|x) focuses on high-utility passages.
+                            </p>
                         </div>
-                        <p>Separate learned temperatures (τ<sub>r</sub> and τ<sub>c</sub>) balance the influence of the RAG and InfoNCE objectives dynamically during training.</p>
+
+                        <div class="math-block">
+                            <div class="math-title">2. Contrastive InfoNCE Objective</div>
+                            <div class="math-formula">f<sub>NCE</sub>(x, d<sup>+</sup>, N<sup>-</sup>; &tau;<sub>c</sub>) = -log [ exp(s<sub>&eta;</sub>(x, d<sup>+</sup>)/&tau;<sub>c</sub>) / (exp(s<sub>&eta;</sub>(x, d<sup>+</sup>)/&tau;<sub>c</sub>) + &sum;<sub>d<sup>-</sup> &in; N<sup>-</sup></sub> exp(s<sub>&eta;</sub>(x, d<sup>-</sup>)/&tau;<sub>c</sub>)) ]</div>
+                            <p style="font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0; color: var(--text-muted);">
+                                Pulls query-positive pairs (d<sup>+</sup>) together and pushes negative distractors (d<sup>-</sup>) apart to stabilize retrieval geometry. The learned temperature <strong>&tau;<sub>c</sub></strong> adaptively scales contrastive margins.
+                            </p>
+                        </div>
+
+                        <div class="math-block">
+                            <div class="math-title">3. Query Distillation Regularizer</div>
+                            <div class="math-formula">f<sub>qdist</sub> = <sup>1</sup>&frasl;<sub>B</sub> &sum;<sub>b=1</sub><sup>B</sup> ( 1 - cos(q<sub>&eta;</sub>(x<sub>b</sub>), q<sub>0</sub>(x<sub>b</sub>)) )</div>
+                            <p style="font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0; color: var(--text-muted);">
+                                Anchors the adapted query encoder embeddings (q<sub>&eta;</sub>) to the frozen base query encoder (q<sub>0</sub>). This prevents query drift and preserves indexing compatibility.
+                            </p>
+                        </div>
+
+                        <div class="math-block" style="border-left-color: var(--primary-light); background-color: rgba(33, 92, 168, 0.06);">
+                            <div class="math-title" style="color: var(--primary-dark);">ARMOR Unified Objective</div>
+                            <div class="math-formula" style="font-size: 1.25rem; color: var(--primary-dark);">f<sub>ARMOR</sub> = f<sub>RAG</sub>(x, y; &tau;<sub>r</sub>) + f<sub>NCE</sub>(x, d<sup>+</sup>, N<sup>-</sup>; &tau;<sub>c</sub>) + &lambda;<sub>q</sub> f<sub>qdist</sub></div>
+                            <p style="font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0; color: var(--text-muted);">
+                                Rather than fixing a static mixture weight, the optimizer dynamically learns the temperatures &tau;<sub>r</sub> and &tau;<sub>c</sub> to balance objectives across different training stages.
+                            </p>
+                        </div>
                     </div>
                     <div class="method-image">
                         <figure class="image-wrapper">
@@ -97,32 +121,158 @@
             <div class="container">
                 <h2 class="section-title">Key Results</h2>
                 
-                <div class="results-grid">
-                    <div class="result-card">
-                        <h3>In-Domain Performance (Tele-Eval)</h3>
-                        <p>ARMOR provides the strongest overall tradeoff across answer quality and retrieval recall in the ISAC and JCC splits when the benchmark is aligned with the domain corpus used for training.</p>
-                        <figure class="image-wrapper mt-4">
-                            <img src="assets/tele_eval_table1.png" alt="Tele-Eval Table 1 results">
-                        </figure>
-                    </div>
+                <div class="result-card" style="margin-bottom: 3rem;">
+                    <h3>In-Domain Performance (Tele-Eval)</h3>
+                    <p>ARMOR provides the strongest overall performance across answer quality (Score) and retrieval recall (Recall@3 / Recall@5) across the ISAC, JCC, and SAGIN splits compared to other baselines.</p>
                     
-                    <div class="result-card">
-                        <h3>Out-of-Corpus Transfer (Tele-QnA)</h3>
-                        <p>On a harder transfer benchmark that is not drawn from the adaptation corpus, ARMOR ties the best JCC accuracy and obtains the best SAGIN accuracy, separating in-corpus specialization from broader transfer.</p>
-                        <figure class="image-wrapper mt-4">
-                            <img src="assets/tele_qna_table2.png" alt="Tele-QnA Table 2 results">
-                        </figure>
+                    <div class="table-responsive">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" style="vertical-align: middle;">Method</th>
+                                    <th colspan="2" class="center" style="border-bottom: 1px solid var(--accent);">ISAC</th>
+                                    <th colspan="2" class="center" style="border-bottom: 1px solid var(--accent);">JCC</th>
+                                    <th colspan="2" class="center" style="border-bottom: 1px solid var(--accent);">SAGIN</th>
+                                </tr>
+                                <tr>
+                                    <th class="center">Score</th>
+                                    <th class="center">R@3 / R@5</th>
+                                    <th class="center">Score</th>
+                                    <th class="center">R@3 / R@5</th>
+                                    <th class="center">Score</th>
+                                    <th class="center">R@3 / R@5</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Base Gen</strong></td>
+                                    <td class="center">0.227</td>
+                                    <td class="center">--</td>
+                                    <td class="center">0.298</td>
+                                    <td class="center">--</td>
+                                    <td class="center">0.302</td>
+                                    <td class="center">--</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Base RAG</strong></td>
+                                    <td class="center">0.689</td>
+                                    <td class="center">0.740 / 0.807</td>
+                                    <td class="center"><span class="best-val">0.776</span></td>
+                                    <td class="center">0.613 / 0.700</td>
+                                    <td class="center">0.766</td>
+                                    <td class="center">0.813 / 0.840</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>RAG QE FT</strong></td>
+                                    <td class="center">0.658</td>
+                                    <td class="center">0.653 / 0.740</td>
+                                    <td class="center">0.723</td>
+                                    <td class="center">0.600 / 0.653</td>
+                                    <td class="center">0.757</td>
+                                    <td class="center">0.693 / 0.787</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>InfoNCE QE FT</strong></td>
+                                    <td class="center">0.669</td>
+                                    <td class="center">0.673 / 0.753</td>
+                                    <td class="center">0.743</td>
+                                    <td class="center">0.620 / 0.680</td>
+                                    <td class="center">0.766</td>
+                                    <td class="center">0.740 / 0.807</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Mix QE FT</strong></td>
+                                    <td class="center">0.685</td>
+                                    <td class="center">0.633 / 0.713</td>
+                                    <td class="center">0.736</td>
+                                    <td class="center">0.640 / 0.680</td>
+                                    <td class="center">0.759</td>
+                                    <td class="center">0.720 / 0.780</td>
+                                </tr>
+                                <tr style="background-color: rgba(33, 92, 168, 0.03);">
+                                    <td><strong>ARMOR (Ours)</strong></td>
+                                    <td class="center"><span class="best-val">0.712</span></td>
+                                    <td class="center"><span class="best-val">0.767 / 0.820</span></td>
+                                    <td class="center">0.772</td>
+                                    <td class="center"><span class="best-val">0.647 / 0.713</span></td>
+                                    <td class="center"><span class="best-val">0.769</span></td>
+                                    <td class="center"><span class="best-val">0.840 / 0.847</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="result-card" style="margin-bottom: 3rem;">
+                    <h3>Component Ablation: Coupling Adaptivity and Regularization</h3>
+                    <p>Evaluating individual components of ARMOR reveals that adaptive temperatures and query distillation regularization are deeply coupled; omitting either drops performance below static mixture baselines.</p>
+                    
+                    <div class="table-responsive" style="max-width: 600px; margin: 1.5rem auto;">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Method</th>
+                                    <th class="center">Adaptive Temp.</th>
+                                    <th class="center">Regularization</th>
+                                    <th class="center">Score (ISAC)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Base RAG</strong></td>
+                                    <td class="center">--</td>
+                                    <td class="center">--</td>
+                                    <td class="center">0.689</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>RAG QE FT</strong></td>
+                                    <td class="center">--</td>
+                                    <td class="center">--</td>
+                                    <td class="center">0.658</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>InfoNCE QE FT</strong></td>
+                                    <td class="center">--</td>
+                                    <td class="center">--</td>
+                                    <td class="center">0.669</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Mix QE FT</strong></td>
+                                    <td class="center">No</td>
+                                    <td class="center">No</td>
+                                    <td class="center">0.685</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Static Mix with Reg.</strong></td>
+                                    <td class="center">No</td>
+                                    <td class="center">Yes</td>
+                                    <td class="center">0.673</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Dynamic Mix without Reg.</strong></td>
+                                    <td class="center">Yes</td>
+                                    <td class="center">No</td>
+                                    <td class="center">0.635</td>
+                                </tr>
+                                <tr style="background-color: rgba(33, 92, 168, 0.03);">
+                                    <td><strong>ARMOR</strong></td>
+                                    <td class="center">Yes</td>
+                                    <td class="center">Yes</td>
+                                    <td class="center"><span class="best-val">0.712</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
                 <div class="grid-2-col mt-8 reveal">
                     <div class="chart-content">
                         <h3>Robustness Across Generator Scale</h3>
-                        <p>We evaluate Base Gen, Base RAG, and ARMOR across different generator backbones. ARMOR yields the largest gains for smaller generators that rely more heavily on retrieved evidence, while still providing benefits for stronger generators.</p>
+                        <p>We evaluate Base Gen, Base RAG, and ARMOR across generator backbones of varying scales (Llama-3-8B-Instruct, Llama-3.2-3B, Llama-3.2-1B, and Qwen3-8B). While 1B and 3B generators show limited headroom, 8B generators leverage the improved evidence selection of ARMOR more effectively. ARMOR gains are consistent across 8B model families, demonstrating that retriever-side adaptation becomes increasingly valuable as the generator capacity improves.</p>
                     </div>
                     <div class="chart-image">
                         <figure class="image-wrapper">
-                            <img src="assets/model_performance_comparison.png" alt="ARMOR results across generator backbones">
+                            <img src="assets/model_performance_comparison_refined.png" alt="ARMOR results across generator backbones">
                         </figure>
                     </div>
                 </div>
@@ -130,12 +280,92 @@
                 <div class="grid-2-col mt-8 reveal layout-reverse">
                     <div class="chart-content">
                         <h3>Adaptive Training Dynamics</h3>
-                        <p>The retrieval temperature sharpens during training, indicating that the retriever increasingly focuses on high-utility evidence. Query distillation helps constrain this adaptation so the tuned query encoder remains compatible with the frozen document embedding space.</p>
+                        <p>The retrieval temperature sharpens during training (as &tau;<sub>r</sub> decreases), showing that the retriever increasingly focuses on high-utility evidence. Query distillation helps constrain this adaptation (measured via query distillation loss) so the tuned query encoder remains compatible with the frozen document embedding space. Select a domain below to view its specific training trajectories:</p>
                     </div>
                     <div class="chart-image">
-                        <figure class="image-wrapper">
-                            <img src="assets/training_dynamics.png" alt="ARMOR adaptive temperature and regularization dynamics">
-                        </figure>
+                        <div class="tabs-container">
+                            <div class="tabs-header">
+                                <button class="tab-btn active" data-tab="isac">ISAC</button>
+                                <button class="tab-btn" data-tab="jcc">JCC</button>
+                                <button class="tab-btn" data-tab="sagin">SAGIN</button>
+                            </div>
+                            <div class="tabs-content">
+                                <div class="tab-pane active" id="tab-isac">
+                                    <figure class="image-wrapper" style="box-shadow: none; border: none; padding: 0;">
+                                        <img src="assets/ISAC_training_dynamics.png" alt="ISAC training dynamics">
+                                        <figcaption>ISAC Adaptive retriever temperature (&tau;<sub>r</sub>, &tau;<sub>c</sub>) and query distillation loss dynamics.</figcaption>
+                                    </figure>
+                                </div>
+                                <div class="tab-pane" id="tab-jcc">
+                                    <figure class="image-wrapper" style="box-shadow: none; border: none; padding: 0;">
+                                        <img src="assets/JCC_training_dynamics.png" alt="JCC training dynamics">
+                                        <figcaption>JCC Adaptive retriever temperature (&tau;<sub>r</sub>, &tau;<sub>c</sub>) and query distillation loss dynamics.</figcaption>
+                                    </figure>
+                                </div>
+                                <div class="tab-pane" id="tab-sagin">
+                                    <figure class="image-wrapper" style="box-shadow: none; border: none; padding: 0;">
+                                        <img src="assets/SAGIN_training_dynamics.png" alt="SAGIN training dynamics">
+                                        <figcaption>SAGIN Adaptive retriever temperature (&tau;<sub>r</sub>, &tau;<sub>c</sub>) and query distillation loss dynamics.</figcaption>
+                                    </figure>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reveal mt-8" style="padding-top: 2rem;">
+                    <h3 class="text-center" style="font-size: 1.8rem; margin-bottom: 1rem;">Data and Corpus Ablations</h3>
+                    <p class="text-center" style="max-width: 800px; margin: 0 auto 2rem; color: var(--text-muted);">
+                        Evaluating retriever adaptation under different data constraints reveals that training data composition is just as crucial as size in low-resource regimes.
+                    </p>
+                    <div class="ablation-grid">
+                        <div class="image-wrapper">
+                            <img src="assets/ablation_datapoint.png" alt="Data size ablation">
+                            <figcaption><strong>Training Data Size:</strong> Varying the number of training QA pairs shows that gains are positive but non-monotone under extreme low-resource conditions.</figcaption>
+                        </div>
+                        <div class="image-wrapper">
+                            <img src="assets/ablation_document.png" alt="Document count ablation">
+                            <figcaption><strong>Corpus Coverage:</strong> Varying the number of source documents tests coverage under the source-document split constraints.</figcaption>
+                        </div>
+                        <div class="image-wrapper">
+                            <img src="assets/ablation_doctype.png" alt="Document type ablation">
+                            <figcaption><strong>Document Type:</strong> Restricting training to specific document types (standards, arXiv, Wikipedia) shows how evidence source impacts downstream QA quality.</figcaption>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="takeaways" class="section section-alt reveal">
+            <div class="container">
+                <h2 class="section-title">Discussion & Takeaways</h2>
+                <p class="text-center" style="max-width: 800px; margin: 0 auto 2rem; color: var(--text-muted);">
+                    Key insights from the interface-layer retriever adaptation study under real training and deployment constraints:
+                </p>
+                <div class="faq-grid">
+                    <div class="faq-card">
+                        <div class="faq-question">Which component moves?</div>
+                        <div class="faq-answer">
+                            During adaptation, <strong>only the query encoder is updated</strong>. The generator and the document index/encoder remain completely frozen. This ensures we do not have to rebuild the massive vector index when training on new domains.
+                        </div>
+                    </div>
+                    <div class="faq-card">
+                        <div class="faq-question">Which objectives matter?</div>
+                        <div class="faq-answer">
+                            We couple two key views of RAG optimization: the <strong>RAG likelihood</strong> for capturing answer generation utility, and the contrastive <strong>InfoNCE</strong> objective for stabilizing and shaping semantic retrieval geometry.
+                        </div>
+                    </div>
+                    <div class="faq-card">
+                        <div class="faq-question">Why temperature adaptivity?</div>
+                        <div class="faq-answer">
+                            Instead of a fixed trade-off weight, ARMOR learns separate temperatures (&tau;<sub>r</sub>, &tau;<sub>c</sub>). This allows the optimization to dynamically shift emphasis as training progresses from coarse evidence search to fine retrieval sharpening.
+                        </div>
+                    </div>
+                    <div class="faq-card">
+                        <div class="faq-question">Why query regularization?</div>
+                        <div class="faq-answer">
+                            Unconstrained query-side adaptation can easily drift away from the frozen document space. Query distillation anchors the adapted encoder to the base encoder, preserving index compatibility while allowing domain alignment.
+                        </div>
                     </div>
                 </div>
             </div>
