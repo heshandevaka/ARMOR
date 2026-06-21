@@ -67,45 +67,13 @@
         <section id="method" class="section section-alt reveal">
             <div class="container">
                 <h2 class="section-title">Methodology</h2>
-                <div class="grid-2-col">
+                
+                <!-- Row 1: Retriever-Centric Adaptation Introduction + Figure -->
+                <div class="grid-2-col" style="align-items: center; margin-bottom: 4rem;">
                     <div class="method-content">
                         <h3>Retriever-Centric Adaptation</h3>
                         <p>In the ARMOR setup, documents are embedded once using a base dense retriever and stored in a fixed index. During adaptation, only the query encoder is updated. This focuses limited supervision on the component that controls which evidence is shown to the model, ensuring the document representation remains stable.</p>
-                        
-                        <h3>Adaptive Regularized Mixture Optimization</h3>
-                        <p>ARMOR optimizes a combination of three key components to adapt the retriever toward downstream generation utility:</p>
-                        
-                        <div class="math-block">
-                            <div class="math-title">1. RAG Likelihood Objective</div>
-                            <div class="math-formula">f<sub>RAG</sub>(x, y; &tau;<sub>r</sub>) = -log &sum;<sub>d &in; D<sub>k</sub>(x)</sub> p<sub>&eta;</sub><sup>(&tau;<sub>r</sub>)</sup>(d|x) p<sub>&theta;<sub>0</sub></sub>(y|x, d)</div>
-                            <p style="font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0; color: var(--text-muted);">
-                                Rewards evidence that helps the frozen generator (p<sub>&theta;<sub>0</sub></sub>) produce the correct answer. The learned temperature <strong>&tau;<sub>r</sub></strong> controls how sharply the retrieval probability distribution p<sub>&eta;</sub><sup>(&tau;<sub>r</sub>)</sup>(d<sub>i</sub>|x) focuses on high-utility passages.
-                            </p>
-                        </div>
-
-                        <div class="math-block">
-                            <div class="math-title">2. Contrastive InfoNCE Objective</div>
-                            <div class="math-formula">f<sub>NCE</sub>(x, d<sup>+</sup>, N<sup>-</sup>; &tau;<sub>c</sub>) = -log [ exp(s<sub>&eta;</sub>(x, d<sup>+</sup>)/&tau;<sub>c</sub>) / (exp(s<sub>&eta;</sub>(x, d<sup>+</sup>)/&tau;<sub>c</sub>) + &sum;<sub>d<sup>-</sup> &in; N<sup>-</sup></sub> exp(s<sub>&eta;</sub>(x, d<sup>-</sup>)/&tau;<sub>c</sub>)) ]</div>
-                            <p style="font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0; color: var(--text-muted);">
-                                Pulls query-positive pairs (d<sup>+</sup>) together and pushes negative distractors (d<sup>-</sup>) apart to stabilize retrieval geometry. The learned temperature <strong>&tau;<sub>c</sub></strong> adaptively scales contrastive margins.
-                            </p>
-                        </div>
-
-                        <div class="math-block">
-                            <div class="math-title">3. Query Distillation Regularizer</div>
-                            <div class="math-formula">f<sub>qdist</sub> = <sup>1</sup>&frasl;<sub>B</sub> &sum;<sub>b=1</sub><sup>B</sup> ( 1 - cos(q<sub>&eta;</sub>(x<sub>b</sub>), q<sub>0</sub>(x<sub>b</sub>)) )</div>
-                            <p style="font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0; color: var(--text-muted);">
-                                Anchors the adapted query encoder embeddings (q<sub>&eta;</sub>) to the frozen base query encoder (q<sub>0</sub>). This prevents query drift and preserves indexing compatibility.
-                            </p>
-                        </div>
-
-                        <div class="math-block" style="border-left-color: var(--primary-light); background-color: rgba(33, 92, 168, 0.06);">
-                            <div class="math-title" style="color: var(--primary-dark);">ARMOR Unified Objective</div>
-                            <div class="math-formula" style="font-size: 1.25rem; color: var(--primary-dark);">f<sub>ARMOR</sub> = f<sub>RAG</sub>(x, y; &tau;<sub>r</sub>) + f<sub>NCE</sub>(x, d<sup>+</sup>, N<sup>-</sup>; &tau;<sub>c</sub>) + &lambda;<sub>q</sub> f<sub>qdist</sub></div>
-                            <p style="font-size: 0.85rem; margin-top: 0.5rem; margin-bottom: 0; color: var(--text-muted);">
-                                Rather than fixing a static mixture weight, the optimizer dynamically learns the temperatures &tau;<sub>r</sub> and &tau;<sub>c</sub> to balance objectives across different training stages.
-                            </p>
-                        </div>
+                        <p>By bypassing costly document re-indexing and avoiding full-scale generator fine-tuning, query-side adaptation provides a computationally efficient path for domain specialization, particularly in low-resource regimes.</p>
                     </div>
                     <div class="method-image">
                         <figure class="image-wrapper">
@@ -113,6 +81,58 @@
                             <figcaption>Retriever-side query-encoder adaptation provides a strong low-resource adaptation path compared with generator-side tuning and other baselines.</figcaption>
                         </figure>
                     </div>
+                </div>
+
+                <!-- Row 2: Adaptive Regularized Mixture Optimization Title & Intro -->
+                <div class="reveal" style="margin-bottom: 2rem;">
+                    <h3 style="font-size: 1.8rem; margin-bottom: 1rem; color: var(--text-main);">Adaptive Regularized Mixture Optimization</h3>
+                    <p style="color: var(--text-muted); max-width: 800px; line-height: 1.7;">
+                        ARMOR optimizes a combination of three key components to adapt the retriever toward downstream generation utility, balancing retrieval quality and model stability:
+                    </p>
+                </div>
+
+                <!-- Row 3: Three Objectives in 3-column Grid -->
+                <div class="ablation-grid reveal" style="margin-bottom: 3rem;">
+                    <div class="math-block" style="margin: 0; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+                        <div>
+                            <div class="math-title">1. RAG Likelihood Objective</div>
+                            <div class="math-formula" style="font-size: 1rem;">f<sub>RAG</sub>(x, y; &tau;<sub>r</sub>) = -log &sum;<sub>d &in; D<sub>k</sub>(x)</sub> p<sub>&eta;</sub><sup>(&tau;<sub>r</sub>)</sup>(d|x) p<sub>&theta;<sub>0</sub></sub>(y|x, d)</div>
+                        </div>
+                        <p style="font-size: 0.85rem; margin-top: 1rem; margin-bottom: 0; color: var(--text-muted); line-height: 1.5;">
+                            Rewards evidence that helps the frozen generator (p<sub>&theta;<sub>0</sub></sub>) produce the correct answer. The learned temperature <strong>&tau;<sub>r</sub></strong> controls how sharply the retrieval probability distribution focuses on high-utility passages.
+                        </p>
+                    </div>
+
+                    <div class="math-block" style="margin: 0; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+                        <div>
+                            <div class="math-title">2. Contrastive InfoNCE Objective</div>
+                            <div class="math-formula" style="font-size: 0.85rem;">f<sub>NCE</sub>(x, d<sup>+</sup>, N<sup>-</sup>; &tau;<sub>c</sub>) = -log [ exp(s<sub>&eta;</sub>(x, d<sup>+</sup>)/&tau;<sub>c</sub>) / (exp(s<sub>&eta;</sub>(x, d<sup>+</sup>)/&tau;<sub>c</sub>) + &sum;<sub>d<sup>-</sup> &in; N<sup>-</sup></sub> exp(s<sub>&eta;</sub>(x, d<sup>-</sup>)/&tau;<sub>c</sub>)) ]</div>
+                        </div>
+                        <p style="font-size: 0.85rem; margin-top: 1rem; margin-bottom: 0; color: var(--text-muted); line-height: 1.5;">
+                            Pulls query-positive pairs (d<sup>+</sup>) together and pushes negative distractors (d<sup>-</sup>) apart to stabilize retrieval geometry. The learned temperature <strong>&tau;<sub>c</sub></strong> adaptively scales contrastive margins.
+                        </p>
+                    </div>
+
+                    <div class="math-block" style="margin: 0; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+                        <div>
+                            <div class="math-title">3. Query Distillation Regularizer</div>
+                            <div class="math-formula" style="font-size: 1rem;">f<sub>qdist</sub> = <sup>1</sup>&frasl;<sub>B</sub> &sum;<sub>b=1</sub><sup>B</sup> ( 1 - cos(q<sub>&eta;</sub>(x<sub>b</sub>), q<sub>0</sub>(x<sub>b</sub>)) )</div>
+                        </div>
+                        <p style="font-size: 0.85rem; margin-top: 1rem; margin-bottom: 0; color: var(--text-muted); line-height: 1.5;">
+                            Anchors the adapted query encoder embeddings (q<sub>&eta;</sub>) to the frozen base query encoder (q<sub>0</sub>). This prevents query drift and preserves indexing compatibility.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Row 4: Final ARMOR objective full width -->
+                <div class="math-block reveal" style="border-left-color: var(--primary-light); background-color: rgba(33, 92, 168, 0.06); margin-top: 2rem;">
+                    <div class="math-title" style="color: var(--primary-dark); font-weight: 700;">ARMOR Unified Objective</div>
+                    <div class="math-formula" style="font-size: 1.35rem; color: var(--primary-dark); padding: 1rem 0; text-align: center;">
+                        f<sub>ARMOR</sub> = f<sub>RAG</sub>(x, y; &tau;<sub>r</sub>) + f<sub>NCE</sub>(x, d<sup>+</sup>, N<sup>-</sup>; &tau;<sub>c</sub>) + &lambda;<sub>q</sub> f<sub>qdist</sub>
+                    </div>
+                    <p style="font-size: 0.9rem; margin-top: 0.5rem; margin-bottom: 0; color: var(--text-muted); text-align: center;">
+                        Rather than fixing a static mixture weight, the optimizer dynamically learns the temperatures &tau;<sub>r</sub> and &tau;<sub>c</sub> to balance objectives across different training stages.
+                    </p>
                 </div>
             </div>
         </section>
